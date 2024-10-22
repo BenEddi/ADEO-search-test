@@ -1,4 +1,4 @@
-const { filterData, countChildren } = require('./app');
+const { filterData, countChildren, buildAnimalIndex } = require('./app');
 
 describe('filterData', () => {
   const data = [
@@ -28,7 +28,7 @@ describe('filterData', () => {
         {
           name: 'Person C',
           animals: [
-            { name: 'Caterpillar' },
+            { name: 'Caterpillar' }, // Matching animals in the same order as the dataset
             { name: 'Cat' },
             { name: 'Cattle' }
           ]
@@ -37,9 +37,11 @@ describe('filterData', () => {
     }
   ];
 
+  const animalIndex = buildAnimalIndex(data); // Build the index from the data
+
   test('should filter data based on the pattern', () => {
     const pattern = 'Cat';
-    const filteredData = filterData(pattern, data);
+    const filteredData = filterData(pattern, animalIndex);
 
     const expectedData = [
       {
@@ -76,18 +78,18 @@ describe('filterData', () => {
   
     expect(filteredData).toEqual(expectedData);
   });
-  
 
   test('should return undefined when no animals match across multiple countries', () => {
     const pattern = 'Elephant';
-    const filteredData = filterData(pattern, data);
+    const filteredData = filterData(pattern, animalIndex);
 
     expect(filteredData).toEqual(undefined);
   });
 
   test('should return undefined for empty data', () => {
+    const emptyAnimalIndex = buildAnimalIndex([]); // Build index for empty data
     const pattern = 'Cat';
-    const filteredData = filterData(pattern, []);
+    const filteredData = filterData(pattern, emptyAnimalIndex);
 
     expect(filteredData).toEqual(undefined);
   });
@@ -108,11 +110,34 @@ describe('filterData', () => {
         ]
       }
     ];
+
+    const animalIndexWithNoAnimals = buildAnimalIndex(dataWithNoAnimals);
     const pattern = 'Cat';
-    const filteredData = filterData(pattern, dataWithNoAnimals);
+    const filteredData = filterData(pattern, animalIndexWithNoAnimals);
 
     expect(filteredData).toEqual(undefined);
   });
+
+  test('should return animals when the pattern is found in the middle of their name', () => {
+    const pattern = 'og';
+    const filteredData = filterData(pattern, animalIndex);
+  
+    const expectedData = [
+      {
+        name: 'Country A',
+        people: [
+          {
+            name: 'Person A',
+            animals: [
+              { name: 'Dog' }  // 'Dog' matches 'og'
+            ]
+          }
+        ]
+      }
+    ];
+    expect(filteredData).toEqual(expectedData);
+  });
+
 });
 
 describe('countChildren', () => {
@@ -254,13 +279,13 @@ describe('countChildren', () => {
 
   test('should count the number of children (case person with no animals)', () => {
     const countedData = countChildren([{
-        name: 'Test Country',
-        people: [
-          {
-            name: 'Test Person',
-            animals: []
-          }
-        ]
+      name: 'Test Country',
+      people: [
+        {
+          name: 'Test Person',
+          animals: []
+        }
+      ]
     }]);
 
     const expectedData = [
